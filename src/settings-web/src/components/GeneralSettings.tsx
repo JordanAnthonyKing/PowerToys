@@ -1,8 +1,7 @@
 import React from 'react';
-import { Stack, Text, PrimaryButton, Label, Link, loadTheme } from 'office-ui-fabric-react';
+import { Stack, Text, PrimaryButton, Label, loadTheme } from 'office-ui-fabric-react';
 import { BoolToggleSettingsControl } from './BoolToggleSettingsControl'
 import { ChoiceGroupSettingsControl } from './ChoiceGroupSettingsControl'
-import { Separator } from 'office-ui-fabric-react/lib/Separator';
 import { CustomActionSettingsControl } from './CustomActionSettingsControl';
 
 export class GeneralSettings extends React.Component <any, any> {
@@ -51,9 +50,10 @@ export class GeneralSettings extends React.Component <any, any> {
   }
 
   public render(): JSX.Element {
-    let power_toys_enabled = this.state.settings.general.enabled;
     return (
       <Stack tokens={{childrenGap:20}}>
+        {/* Remove this block until future PowerToys are reimplemented */}
+        {/*
         <Text variant='xLarge'>Available PowerToys</Text>
         { Object.keys(power_toys_enabled).map(
           (key) => {
@@ -120,7 +120,8 @@ export class GeneralSettings extends React.Component <any, any> {
           })
         }
         <Separator />
-        <Text variant='xLarge'>General</Text>
+      */}
+        {/*<Text variant='xLarge'>General</Text>*/}
         <Stack>
           {this.state.settings.general.startup_disabled_reason != null && 
             <span style={{color:"#c50500"}} dangerouslySetInnerHTML={{__html: this.state.settings.general.startup_disabled_reason }} />
@@ -238,7 +239,7 @@ export class GeneralSettings extends React.Component <any, any> {
           ref={(input) => {this.theme_reference=input;}}
         />
         <Stack>
-          <Text variant='xLarge'>About PowerToys (Preview)</Text>
+          <Text variant='xLarge'>About</Text>
           <Label>Version {this.state.settings.general.powertoys_version}</Label>
             <PrimaryButton
               styles={{
@@ -249,6 +250,8 @@ export class GeneralSettings extends React.Component <any, any> {
               href='https://github.com/microsoft/PowerToys/releases'
               target='_blank'
             >Check for updates</PrimaryButton>
+            {/* Update these links */}
+            {/*}
             <Link
               href="https://github.com/microsoft/PowerToys/issues/new?assignees=&labels=&template=bug_report.md&title="
               target='_blank'
@@ -266,6 +269,7 @@ export class GeneralSettings extends React.Component <any, any> {
               href="https://github.com/microsoft/PowerToys#privacy-statement"
               target='_blank'
             >Privacy statement</Link>
+            */}
         </Stack>
         {/* An empty span to always give 30px padding in Edge. */}
         <span />

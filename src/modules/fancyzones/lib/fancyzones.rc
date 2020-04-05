@@ -5,7 +5,7 @@
 
 STRINGTABLE
 BEGIN
-    IDS_SETTING_DESCRIPTION                                    "Create window layouts to help make multi-tasking easy"
+    IDS_SETTING_DESCRIPTION                                    "Proper window management for Windows"
     IDS_SETTING_DESCRIPTION_SHIFTDRAG                          "On: Hold Shift key or any non-primary mouse button to enable zones while dragging"
     IDS_SETTING_DESCRIPTION_OVERRIDE_SNAP_HOTKEYS              "Override Windows Snap hotkeys (win+arrow) to move windows between zones"
     IDS_SETTING_DESCRIPTION_DISPLAYCHANGE_MOVEWINDOWS          "Keep windows in their zones when the screen resolution changes"
@@ -25,7 +25,7 @@ BEGIN
     IDS_SETTING_LAUNCH_EDITOR_HOTKEY_LABEL                     "Configure the zone editor hotkey"
     IDS_SETTING_EXCLCUDED_APPS_DESCRIPTION                     "To exclude an application from snapping to zones add its name here (one per line). Excluded apps will react to the Windows Snap regardless of all other settings."
     IDS_SETTINGS_HIGHLIGHT_OPACITY                             "Zone opacity (%)" 
-    IDS_FANCYZONES                                             L"FancyZones" 
+    IDS_FANCYZONES                                             L"FancyZones+" 
     IDS_CANT_DRAG_ELEVATED                                     L"We've detected an application running with administrator privileges. This blocks some functionality in PowerToys. Visit our wiki page to learn more."
     IDS_CANT_DRAG_ELEVATED_LEARN_MORE                          L"Learn more"
     IDS_CANT_DRAG_ELEVATED_DIALOG_DONT_SHOW_AGAIN              L"Don't show again"

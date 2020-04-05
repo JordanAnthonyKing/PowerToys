@@ -1,5 +1,5 @@
 import React from 'react';
-import {Stack, Text, Link} from 'office-ui-fabric-react';
+import {Stack, Text} from 'office-ui-fabric-react';
 import {BoolToggleSettingsControl} from './BoolToggleSettingsControl';
 import {StringTextSettingsControl} from './StringTextSettingsControl';
 import {IntSpinnerSettingsControl} from './IntSpinnerSettingsControl';
@@ -60,42 +60,6 @@ export class ModuleSettings extends React.Component <any, any> {
     let power_toys_properties = this.state.powertoy.properties;
     return (
       <Stack tokens={{childrenGap:20}}>
-        <Stack>
-          <Text variant='large'>{this.state.powertoy.description}</Text>
-          { this.state.powertoy.hasOwnProperty('overview_link') || this.state.powertoy.hasOwnProperty('video_link') ? <br/> : null }
-          {
-            this.state.powertoy.hasOwnProperty('overview_link')
-            ?
-            <Stack horizontal tokens={{childrenGap:5}}>
-              <Link
-                styles = {{
-                  root: {
-                    alignSelf:'center'
-                  }
-                }}
-                href={this.state.powertoy.overview_link}
-                target='_blank'
-              >Module overview</Link>
-            </Stack>
-            :
-            null
-          }
-          {
-            this.state.powertoy.hasOwnProperty('video_link')
-            ?
-            <Stack horizontal tokens={{childrenGap:5}}>
-              <Link
-                styles = {{
-                  root: {
-                    alignSelf:'center'
-                  }
-                }}
-                href={this.state.powertoy.video_link} target='_blank'>Video demo</Link>
-            </Stack>
-            :
-            null
-          }
-        </Stack>
         {
           Object.keys(power_toys_properties).
           sort(function(a, b) {

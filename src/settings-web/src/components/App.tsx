@@ -195,7 +195,7 @@ export class App extends React.Component <any, any> {
               >
                 { this.state.selected_menu!='general' ?
                   powertoys_dict[this.state.selected_menu].name + " Settings" :
-                  "PowerToys General Settings"
+                  "General Settings"
                 }
               </Text>
             </div>
