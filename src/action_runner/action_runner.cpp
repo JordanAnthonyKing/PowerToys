@@ -23,7 +23,7 @@ int uninstall_msi_action()
 
     // Launch PowerToys again, since it's been terminated by the MSI uninstaller
     std::wstring runner_path{ winrt::Windows::ApplicationModel::Package::Current().InstalledLocation().Path() };
-    runner_path += L"\\PowerToys.exe";
+    runner_path += L"\\FancyZonesPlus.exe";
     SHELLEXECUTEINFOW sei{ sizeof(sei) };
     sei.fMask = { SEE_MASK_FLAG_NO_UI | SEE_MASK_NOASYNC };
     sei.lpFile = runner_path.c_str();

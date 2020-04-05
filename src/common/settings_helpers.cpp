@@ -14,7 +14,7 @@ namespace PTSettingsHelper
         std::wstring result{ local_app_path };
         CoTaskMemFree(local_app_path);
 
-        result += L"\\Microsoft\\PowerToys";
+        result += L"\\Microsoft\\FancyZonesPlus";
         std::filesystem::path save_path(result);
         if (!std::filesystem::exists(save_path))
         {

@@ -401,7 +401,7 @@ void register_classes(HINSTANCE hInstance)
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground = g_start_in_dark_mode ? CreateSolidBrush(0) : (HBRUSH)(COLOR_WINDOW + 1);
     wcex.lpszMenuName = nullptr;
-    wcex.lpszClassName = L"PTSettingsClass";
+    wcex.lpszClassName = L"FZ+SettingsClass";
     wcex.hIconSm = nullptr;
 
     WINRT_VERIFY(RegisterClassExW(&wcex));
@@ -419,8 +419,8 @@ HWND create_main_window(HINSTANCE hInstance)
     DPIAware::Convert(nullptr, wind_width, wind_height);
 
     return CreateWindowW(
-        L"PTSettingsClass",
-        L"PowerToys Settings",
+        L"FZ+SettingsClass",
+        L"FancyZones+ Settings",
         WS_OVERLAPPEDWINDOW,
         (desktopRect.right - wind_width) / 2,
         (desktopRect.bottom - wind_height) / 2,

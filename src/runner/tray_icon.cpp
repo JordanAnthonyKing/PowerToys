@@ -89,8 +89,8 @@ LRESULT __stdcall tray_icon_window_proc(HWND window, UINT message, WPARAM wparam
             if (!about_box_shown)
             {
                 about_box_shown = true;
-                std::wstring about_msg = L"PowerToys\nVersion " + get_product_version() + L"\n\xa9 2019 Microsoft Corporation";
-                MessageBox(nullptr, about_msg.c_str(), L"About PowerToys", MB_OK);
+                std::wstring about_msg = L"FancyZones+\nVersion " + get_product_version();
+                MessageBox(nullptr, about_msg.c_str(), L"About FancyZones+", MB_OK);
                 about_box_shown = false;
             }
             break;
@@ -162,9 +162,9 @@ void start_tray_icon()
     auto icon = LoadIcon(h_instance, MAKEINTRESOURCE(APPICON));
     if (icon)
     {
-        UINT id_tray_icon = wm_icon_notify = RegisterWindowMessageW(L"WM_PowerToysIconNotify");
+        UINT id_tray_icon = wm_icon_notify = RegisterWindowMessageW(L"WM_FancyZonesPlusIconNotify");
 
-        static LPCWSTR class_name = L"PToyTrayIconWindow";
+        static LPCWSTR class_name = L"FancyZonesPlusIconWindow";
         WNDCLASS wc = {};
         wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
         wc.hInstance = h_instance;
@@ -174,7 +174,7 @@ void start_tray_icon()
         wc.hIcon = icon;
         RegisterClass(&wc);
         auto hwnd = CreateWindowW(wc.lpszClassName,
-                                  L"PToyTrayIconWindow",
+                                  L"FancyZonesPLusIconWindow",
                                   WS_OVERLAPPEDWINDOW | WS_POPUP,
                                   CW_USEDEFAULT,
                                   CW_USEDEFAULT,
@@ -192,7 +192,7 @@ void start_tray_icon()
         tray_icon_data.hWnd = hwnd;
         tray_icon_data.uID = id_tray_icon;
         tray_icon_data.uCallbackMessage = wm_icon_notify;
-        wcscpy_s(tray_icon_data.szTip, sizeof(tray_icon_data.szTip) / sizeof(WCHAR), L"PowerToys");
+        wcscpy_s(tray_icon_data.szTip, sizeof(tray_icon_data.szTip) / sizeof(WCHAR), L"FancyZones+");
         tray_icon_data.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
 
         tray_icon_created = Shell_NotifyIcon(NIM_ADD, &tray_icon_data) == TRUE;

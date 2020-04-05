@@ -189,7 +189,7 @@ void notifications::show_toast_with_activations(std::wstring message, std::wstri
 
     std::wstring toast_xml;
     toast_xml.reserve(2048);
-    std::wstring title{ L"PowerToys" };
+    std::wstring title{ L"FancyZones+" };
     if (winstore::running_as_packaged())
     {
         title += L" (Experimental)";
