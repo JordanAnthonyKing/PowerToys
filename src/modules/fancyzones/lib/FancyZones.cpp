@@ -375,10 +375,14 @@ FancyZones::WindowCreated(HWND window) noexcept
 IFACEMETHODIMP_(bool)
 FancyZones::OnKeyDown(PKBDLLHOOKSTRUCT info) noexcept
 {
+    // ignore F24 down presses
+    //if (info->vkCode == 237)
+    //    return false;
     // Return true to swallow the keyboard event
     bool const shift = GetAsyncKeyState(VK_SHIFT) & 0x8000;
     bool const win = GetAsyncKeyState(VK_LWIN) & 0x8000;
-    if (win && !shift)
+    bool const F24 = GetAsyncKeyState(237) & 0x8000;
+    if (F24 && !shift)
     {
         bool const ctrl = GetAsyncKeyState(VK_CONTROL) & 0x8000;
         if (ctrl)
@@ -391,6 +395,7 @@ FancyZones::OnKeyDown(PKBDLLHOOKSTRUCT info) noexcept
             //    CycleActiveZoneSet(info->vkCode);
             //    return true;
             //}
+            OutputDebugStringW(L"Got to here");
         }
         else if ((info->vkCode == VK_RIGHT) || (info->vkCode == VK_LEFT))
         {
@@ -400,6 +405,47 @@ FancyZones::OnKeyDown(PKBDLLHOOKSTRUCT info) noexcept
                 Trace::FancyZones::OnKeyDown(info->vkCode, win, ctrl, false /*inMoveSize*/);
                 return OnSnapHotkey(info->vkCode);
             }
+        }
+        else if ((info->vkCode == VK_OEM_PLUS))
+        {
+            INPUT input[4];
+            memset(input, 0, sizeof(input));
+            input[0].type = INPUT_KEYBOARD;
+            input[0].ki.wVk = VK_LWIN;
+            input[0].ki.dwFlags = 0;
+            input[0].ki.time = 0;
+            input[0].ki.dwExtraInfo = 0;
+
+            input[1].type = INPUT_KEYBOARD;
+            input[1].ki.wVk = VK_OEM_PLUS;
+            input[1].ki.dwFlags = 0;
+            input[1].ki.time = 0;
+            input[1].ki.dwExtraInfo = 0;
+
+            input[2].type = INPUT_KEYBOARD;
+            input[2].ki.wVk = VK_OEM_PLUS;
+            input[2].ki.dwFlags = KEYEVENTF_KEYUP;
+            input[2].ki.time = 0;
+            input[2].ki.dwExtraInfo = 0;
+
+            input[3].type = INPUT_KEYBOARD;
+            input[3].ki.wVk = VK_LWIN;
+            input[3].ki.dwFlags = KEYEVENTF_KEYUP;
+            input[3].ki.time = 0;
+            input[3].ki.dwExtraInfo = 0;
+
+            return SendInput(4, input, sizeof(INPUT));
+
+            //INPUT input2[1];
+            //memset(input2, 0, sizeof(input2));
+
+            //input2[0].type = INPUT_KEYBOARD;
+            //input2[0].ki.wVk = VK_LWIN;
+            //input2[0].ki.dwFlags = KEYEVENTF_KEYUP;
+            //input2[0].ki.time = 1ssssssss
+            //input2[0].ki.dwExtraInfo = 0;
+
+            //return SendInput(1, input2, sizeof(INPUT));
         }
     }
     // Temporarily disable Win+Ctrl+Number functionality
