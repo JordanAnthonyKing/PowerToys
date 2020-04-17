@@ -185,6 +185,9 @@ public:
         return m_settings->GetSettings()->makeDraggedWindowTransparent;
     }
 
+    bool HandleDefaultBindings(DWORD, bool, bool, bool) noexcept;
+    bool HandleVimBindings(DWORD, bool, bool, bool) noexcept;
+
     LRESULT WndProc(HWND, UINT, WPARAM, LPARAM) noexcept;
     void OnDisplayChange(DisplayChangeType changeType) noexcept;
     void AddZoneWindow(HMONITOR monitor, PCWSTR deviceId) noexcept;
@@ -376,50 +379,78 @@ FancyZones::WindowCreated(HWND window) noexcept
 }
 
 // IFancyZonesCallback
+// Return true to swallow the keyboard event
 IFACEMETHODIMP_(bool)
 FancyZones::OnKeyDown(PKBDLLHOOKSTRUCT info) noexcept
 {
-    // Return true to swallow the keyboard event
     bool const shift = GetAsyncKeyState(VK_SHIFT) & 0x8000;
-    bool const win = GetAsyncKeyState(VK_LWIN) & 0x8000 || GetAsyncKeyState(VK_RWIN) & 0x8000;
-    if (win && !shift)
+    bool const ctrl = GetAsyncKeyState(VK_CONTROL) & 0x8000;
+
+    if (m_settings->GetSettings()->vimBindings)
     {
-        bool const ctrl = GetAsyncKeyState(VK_CONTROL) & 0x8000;
-        if (ctrl)
-        {
-            // Temporarily disable Win+Ctrl+Number functionality
-            //if ((info->vkCode >= '0') && (info->vkCode <= '9'))
-            //{
-            //    // Win+Ctrl+Number will cycle through ZoneSets
-            //    Trace::FancyZones::OnKeyDown(info->vkCode, win, ctrl, false /*inMoveSize*/);
-            //    CycleActiveZoneSet(info->vkCode);
-            //    return true;
-            //}
-        }
-        else if ((info->vkCode == VK_RIGHT) || (info->vkCode == VK_LEFT))
-        {
-            if (m_settings->GetSettings()->overrideSnapHotkeys)
-            {
-                Trace::FancyZones::OnKeyDown(info->vkCode, win, ctrl, false /*inMoveSize*/);
-                // Win+Left, Win+Right will cycle through Zones in the active ZoneSet when WM_PRIV_LOWLEVELKB's handled
-                PostMessageW(m_window, WM_PRIV_LOWLEVELKB, 0, info->vkCode);
-                return true;
-            }
-        }
+        //change this to F24
+		bool const win = GetAsyncKeyState(237) & 0x8000;
+        HandleVimBindings(info->vkCode, win, ctrl, shift);
     }
-    // Temporarily disable Win+Ctrl+Number functionality
-    //else if (m_inMoveSize && (info->vkCode >= '0') && (info->vkCode <= '9'))
-    //{
-    //    // This allows you to cycle through ZoneSets while dragging a window
-    //    Trace::FancyZones::OnKeyDown(info->vkCode, win, false /*control*/, true /*inMoveSize*/);
-    //    CycleActiveZoneSet(info->vkCode);
-    //    return false;
-    //}
+    else
+    {
+		bool const win = GetAsyncKeyState(VK_LWIN) & 0x8000 || GetAsyncKeyState(VK_RWIN) & 0x8000;
+        HandleDefaultBindings(info->vkCode, win, ctrl, shift);
+    }
 
     if (m_windowMoveHandler.IsDragEnabled() && shift)
     {
         return true;
     }
+    return false;
+}
+
+bool FancyZones::HandleDefaultBindings(DWORD vkCode, bool win, bool control, bool shift) noexcept
+{
+    if (win && !shift)
+    {
+        bool const ctrl = GetAsyncKeyState(VK_CONTROL) & 0x8000;
+        if ((vkCode == VK_RIGHT) || (vkCode == VK_LEFT))
+        {
+            if (m_settings->GetSettings()->overrideSnapHotkeys)
+            {
+                // Win+Left, Win+Right will cycle through Zones in the active ZoneSet
+                Trace::FancyZones::OnKeyDown(vkCode, win, ctrl, false /*inMoveSize*/);
+                return OnSnapHotkey(vkCode);
+            }
+        }
+    }
+
+    return false;
+}
+
+bool FancyZones::HandleVimBindings(DWORD vkCode, bool win, bool control, bool shift) noexcept
+{
+    if (win && !shift)
+    {
+        bool const ctrl = GetAsyncKeyState(VK_CONTROL) & 0x8000;
+		if (m_settings->GetSettings()->overrideSnapHotkeys)
+		{
+			if (vkCode == VkKeyScanW('h'))
+			{
+                Trace::FancyZones::OnKeyDown(vkCode, win, ctrl, false /*inMoveSize*/);
+                return OnSnapHotkey(VK_LEFT);
+            }
+			if (vkCode == VkKeyScanW('l'))
+			{
+                Trace::FancyZones::OnKeyDown(vkCode, win, ctrl, false /*inMoveSize*/);
+                return OnSnapHotkey(VK_RIGHT);
+            }
+        }
+    }
+
+    if (win)
+    {
+        // Swallow F24 (win) keypresses
+        return true; 
+    }
+
+    //Always swallow as we've replaced
     return false;
 }
 
@@ -550,6 +581,28 @@ void FancyZones::SettingsChanged() noexcept
     // Update the hotkey
     UnregisterHotKey(m_window, 1);
     RegisterHotKey(m_window, 1, m_settings->GetSettings()->editorHotkey.get_modifiers(), m_settings->GetSettings()->editorHotkey.get_code());
+
+    // Toggle aggressive rebinding of the winkey for vim bindings
+	wil::unique_hkey key{};
+	auto path = L"System\\CurrentControlSet\\Control\\Keyboard Layout";
+	auto valName = L"Scancode Map";
+
+	if (m_settings->GetSettings()->vimBindings)
+	{
+		if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, path, 0, KEY_ALL_ACCESS, &key) == ERROR_SUCCESS)
+		{
+			//byte array for rebinding Win to F24
+			unsigned char bytes[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 111, 0, 91, 224, 0, 0, 0, 0};
+			//byte array for rebinding RCtrl to F24
+			unsigned char bytez[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 111, 0, 29, 224, 0, 0, 0, 0};
+
+			RegSetValueExW(key.get(), valName, 0, REG_BINARY, bytes, ARRAYSIZE(bytez));
+		}
+	}
+	else
+	{
+		RegDeleteKeyValueW(HKEY_LOCAL_MACHINE, path, valName);
+	}
 }
 
 // IZoneWindowHost

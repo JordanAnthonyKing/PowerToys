@@ -36,7 +36,8 @@ private:
         PCWSTR name;
         bool* value;
         int resourceId;
-    } m_configBools[11 /* 12 */] = { // "Turning FLASHING_ZONE option off"
+    } m_configBools[12] = { // "Turning FLASHING_ZONE option off"
+        { L"fancyzones_vimBindings", &m_settings.vimBindings, IDS_SETTING_DESCRIPTION_VIM_BINDINGS },
         { L"fancyzones_shiftDrag", &m_settings.shiftDrag, IDS_SETTING_DESCRIPTION_SHIFTDRAG },
         { L"fancyzones_mouseSwitch", &m_settings.mouseSwitch, IDS_SETTING_DESCRIPTION_MOUSESWITCH },
         { L"fancyzones_overrideSnapHotkeys", &m_settings.overrideSnapHotkeys, IDS_SETTING_DESCRIPTION_OVERRIDE_SNAP_HOTKEYS },

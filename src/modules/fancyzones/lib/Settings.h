@@ -6,6 +6,7 @@
 struct Settings
 {
     // The values specified here are the defaults.
+    bool vimBindings = false;
     bool shiftDrag = true;
     bool mouseSwitch = false;
     bool displayChange_moveWindows = false;
