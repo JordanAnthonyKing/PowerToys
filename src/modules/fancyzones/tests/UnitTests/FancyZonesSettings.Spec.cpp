@@ -404,6 +404,8 @@ namespace FancyZonesUnitTests
             WindowCreated(HWND window) noexcept {}
             IFACEMETHODIMP_(bool)
             OnKeyDown(PKBDLLHOOKSTRUCT info) noexcept { return false; }
+            IFACEMETHODIMP_(bool)
+            OnKeyUp(PKBDLLHOOKSTRUCT info) noexcept { return false; }
 
             IFACEMETHODIMP_(void)
             ToggleEditor() noexcept

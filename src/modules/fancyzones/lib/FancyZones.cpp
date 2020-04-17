@@ -118,6 +118,8 @@ public:
     VirtualDesktopInitialize() noexcept;
     IFACEMETHODIMP_(bool)
     OnKeyDown(PKBDLLHOOKSTRUCT info) noexcept;
+    IFACEMETHODIMP_(bool)
+    OnKeyUp(PKBDLLHOOKSTRUCT info) noexcept;
     IFACEMETHODIMP_(void)
     ToggleEditor() noexcept;
     IFACEMETHODIMP_(void)
@@ -388,19 +390,44 @@ FancyZones::OnKeyDown(PKBDLLHOOKSTRUCT info) noexcept
 
     if (m_settings->GetSettings()->vimBindings)
     {
-        //change this to F24
-		bool const win = GetAsyncKeyState(237) & 0x8000;
-        HandleVimBindings(info->vkCode, win, ctrl, shift);
+        bool const win = GetAsyncKeyState(237) & 0x8000;
+
+        if (info->vkCode != 237)
+        {
+            return HandleVimBindings(info->vkCode, win, ctrl, shift);
+        }
     }
     else
     {
 		bool const win = GetAsyncKeyState(VK_LWIN) & 0x8000 || GetAsyncKeyState(VK_RWIN) & 0x8000;
-        HandleDefaultBindings(info->vkCode, win, ctrl, shift);
+        return HandleDefaultBindings(info->vkCode, win, ctrl, shift);
     }
 
     if (m_windowMoveHandler.IsDragEnabled() && shift)
     {
         return true;
+    }
+    return false;
+}
+
+// IFancyZonesCallback
+// Return true to swallow the keyboard event
+IFACEMETHODIMP_(bool)
+FancyZones::OnKeyUp(PKBDLLHOOKSTRUCT info) noexcept
+{
+    // If F24
+    if (info->vkCode == 237)
+    {
+		INPUT input[1];
+		memset(input, 0, sizeof(input));
+
+		input[0].type = INPUT_KEYBOARD;
+		input[0].ki.wVk = VK_LWIN;
+		input[0].ki.dwFlags = KEYEVENTF_KEYUP;
+		input[0].ki.time = 0;
+		input[0].ki.dwExtraInfo = 0;
+
+		SendInput(1, input, sizeof(INPUT));
     }
     return false;
 }
@@ -420,7 +447,6 @@ bool FancyZones::HandleDefaultBindings(DWORD vkCode, bool win, bool control, boo
             }
         }
     }
-
     return false;
 }
 
@@ -428,17 +454,16 @@ bool FancyZones::HandleVimBindings(DWORD vkCode, bool win, bool control, bool sh
 {
     if (win && !shift)
     {
-        bool const ctrl = GetAsyncKeyState(VK_CONTROL) & 0x8000;
 		if (m_settings->GetSettings()->overrideSnapHotkeys)
 		{
 			if (vkCode == VkKeyScanW('h'))
 			{
-                Trace::FancyZones::OnKeyDown(vkCode, win, ctrl, false /*inMoveSize*/);
+                Trace::FancyZones::OnKeyDown(vkCode, win, control, false /*inMoveSize*/);
                 return OnSnapHotkey(VK_LEFT);
             }
 			if (vkCode == VkKeyScanW('l'))
 			{
-                Trace::FancyZones::OnKeyDown(vkCode, win, ctrl, false /*inMoveSize*/);
+                Trace::FancyZones::OnKeyDown(vkCode, win, control, false /*inMoveSize*/);
                 return OnSnapHotkey(VK_RIGHT);
             }
         }
@@ -446,11 +471,18 @@ bool FancyZones::HandleVimBindings(DWORD vkCode, bool win, bool control, bool sh
 
     if (win)
     {
-        // Swallow F24 (win) keypresses
-        return true; 
+        INPUT input[1];
+        memset(input, 0, sizeof(input));
+
+        input[0].type = INPUT_KEYBOARD;
+        input[0].ki.wVk = VK_LWIN;
+        input[0].ki.dwFlags = 0;
+        input[0].ki.time = 0;
+        input[0].ki.dwExtraInfo = 0;
+
+        SendInput(1, input, sizeof(INPUT));
     }
 
-    //Always swallow as we've replaced
     return false;
 }
 
