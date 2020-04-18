@@ -187,9 +187,6 @@ public:
         return m_settings->GetSettings()->makeDraggedWindowTransparent;
     }
 
-    bool HandleDefaultBindings(DWORD, bool, bool, bool) noexcept;
-    bool HandleVimBindings(DWORD, bool, bool, bool) noexcept;
-
     LRESULT WndProc(HWND, UINT, WPARAM, LPARAM) noexcept;
     void OnDisplayChange(DisplayChangeType changeType) noexcept;
     void AddZoneWindow(HMONITOR monitor, PCWSTR deviceId) noexcept;
@@ -221,6 +218,13 @@ private:
             lock;
         }
     };
+
+    bool HandleDefaultBindings(DWORD vkCode, bool win, bool control, bool shift) noexcept;
+    bool HandleVimBindings(DWORD vkCode, bool win, bool control, bool shift) noexcept;
+    void SendKeyDownUp(int vkCode) noexcept;
+    void SendKeyDown(int vkCode) noexcept;
+    void SendKeyUp(int vkCode) noexcept;
+    void SendKey(int vkCode, int dwFlags) noexcept;
 
     void UpdateZoneWindows() noexcept;
     void UpdateWindowsPositions() noexcept;
@@ -418,16 +422,7 @@ FancyZones::OnKeyUp(PKBDLLHOOKSTRUCT info) noexcept
     // If F24
     if (info->vkCode == 237)
     {
-		INPUT input[1];
-		memset(input, 0, sizeof(input));
-
-		input[0].type = INPUT_KEYBOARD;
-		input[0].ki.wVk = VK_LWIN;
-		input[0].ki.dwFlags = KEYEVENTF_KEYUP;
-		input[0].ki.time = 0;
-		input[0].ki.dwExtraInfo = 0;
-
-		SendInput(1, input, sizeof(INPUT));
+        SendKeyUp(VK_LWIN);
     }
     return false;
 }
@@ -452,7 +447,7 @@ bool FancyZones::HandleDefaultBindings(DWORD vkCode, bool win, bool control, boo
 
 bool FancyZones::HandleVimBindings(DWORD vkCode, bool win, bool control, bool shift) noexcept
 {
-    if (win && !shift)
+    if (win && !shift && !control)
     {
 		if (m_settings->GetSettings()->overrideSnapHotkeys)
 		{
@@ -467,23 +462,95 @@ bool FancyZones::HandleVimBindings(DWORD vkCode, bool win, bool control, bool sh
                 return OnSnapHotkey(VK_RIGHT);
             }
         }
+        else
+        {
+			if (vkCode == VkKeyScanW('h'))
+			{
+                Trace::FancyZones::OnKeyDown(vkCode, win, control, false /*inMoveSize*/);
+                SendKeyDown(VK_LWIN);
+				SendKeyDownUp(VK_LEFT);
+				return true;
+            }
+			if (vkCode == VkKeyScanW('l'))
+			{
+                Trace::FancyZones::OnKeyDown(vkCode, win, control, false /*inMoveSize*/);
+                SendKeyDown(VK_LWIN);
+				SendKeyDownUp(VK_RIGHT);
+				return true;
+            }
+        }
+		if (vkCode == VkKeyScanW('j'))
+		{
+			Trace::FancyZones::OnKeyDown(vkCode, win, control, false /*inMoveSize*/);
+			SendKeyDown(VK_LWIN);
+			SendKeyDownUp(VK_DOWN);
+			return true;
+		}
+		if (vkCode == VkKeyScanW('k'))
+		{
+			Trace::FancyZones::OnKeyDown(vkCode, win, control, false /*inMoveSize*/);
+			SendKeyDown(VK_LWIN);
+			SendKeyDownUp(VK_UP);
+			return true;
+		}
+    }
+
+    if (win && !shift && control)
+    {
+		if (vkCode == VkKeyScanW('h'))
+		{
+			Trace::FancyZones::OnKeyDown(vkCode, win, control, false /*inMoveSize*/);
+			SendKeyDown(VK_LWIN);
+			SendKeyDown(VK_LCONTROL);
+			SendKeyDownUp(VK_LEFT);
+			return true;
+		}
+		if (vkCode == VkKeyScanW('l'))
+		{
+			Trace::FancyZones::OnKeyDown(vkCode, win, control, false /*inMoveSize*/);
+			SendKeyDown(VK_LWIN);
+			SendKeyDown(VK_LCONTROL);
+			SendKeyDownUp(VK_RIGHT);
+			return true;
+		}
     }
 
     if (win)
     {
-        INPUT input[1];
-        memset(input, 0, sizeof(input));
-
-        input[0].type = INPUT_KEYBOARD;
-        input[0].ki.wVk = VK_LWIN;
-        input[0].ki.dwFlags = 0;
-        input[0].ki.time = 0;
-        input[0].ki.dwExtraInfo = 0;
-
-        SendInput(1, input, sizeof(INPUT));
+        SendKeyDown(VK_LWIN);
     }
 
     return false;
+}
+
+void FancyZones::SendKeyDownUp(int vkCode) noexcept
+{
+    SendKey(vkCode, 0);
+    SendKey(vkCode, KEYEVENTF_KEYUP);
+}
+
+void FancyZones::SendKeyDown(int vkCode) noexcept
+{
+    SendKey(vkCode, 0);
+}
+
+void FancyZones::SendKeyUp(int vkCode) noexcept
+{
+    SendKey(vkCode, KEYEVENTF_KEYUP);
+}
+
+void FancyZones::SendKey(int vkCode, int dwFlags) noexcept
+{
+	INPUT input[1];
+	memset(input, 0, sizeof(input));
+
+	input[0].type = INPUT_KEYBOARD;
+	input[0].ki.wVk = vkCode;
+	input[0].ki.dwFlags = dwFlags;
+	input[0].ki.time = 0;
+	input[0].ki.dwExtraInfo = 0;
+
+	SendInput(1, input, sizeof(INPUT));
 }
 
 // IFancyZonesCallback
