@@ -225,6 +225,7 @@ private:
     void SendKeyDown(int vkCode) noexcept;
     void SendKeyUp(int vkCode) noexcept;
     void SendKey(int vkCode, int dwFlags) noexcept;
+    void AddOrRemZone(int vkCode) noexcept;
 
     void UpdateZoneWindows() noexcept;
     void UpdateWindowsPositions() noexcept;
@@ -451,6 +452,15 @@ bool FancyZones::HandleDefaultBindings(DWORD vkCode, bool win, bool control, boo
             return true;
         }
     }
+    if (win && !shift && !control)
+    {
+        if (vkCode == VK_OEM_PLUS || vkCode == VK_OEM_MINUS)
+        {
+            Trace::FancyZones::OnKeyDown(vkCode, win, control, false);
+            AddOrRemZone(vkCode);
+            return true;
+        } 
+    }
 
     return false;
 }
@@ -512,6 +522,15 @@ bool FancyZones::HandleVimBindings(DWORD vkCode, bool win, bool control, bool sh
             MoveWindowIntoZoneByIndex(GetForegroundWindow(), nullptr, vkCode - 49);
             return true;
         }
+    }
+    if (win && !shift && !control)
+    {
+        if (vkCode == VK_OEM_PLUS || vkCode == VK_OEM_MINUS)
+        {
+            Trace::FancyZones::OnKeyDown(vkCode, win, control, false);
+            AddOrRemZone(vkCode);
+            return true;
+        } 
     }
 
     if (win)
@@ -971,6 +990,48 @@ void FancyZones::CycleActiveZoneSet(DWORD vkCode) noexcept
                 zoneWindowPtr->CycleActiveZoneSet(vkCode);
             }
         }
+    }
+}
+
+void FancyZones::AddOrRemZone(int vkCode) noexcept
+{
+	HMONITOR monitor{};
+	HWND foregroundWindow{};
+	foregroundWindow = GetForegroundWindow();
+	monitor = MonitorFromWindow(foregroundWindow, MONITOR_DEFAULTTOPRIMARY);
+	if (!monitor) return;
+
+	auto iter = m_zoneWindowMap.find(monitor);
+	if (iter == m_zoneWindowMap.end()) return;
+
+	auto zoneWindow = iter->second;
+	const auto& fancyZonesData = JSONHelpers::FancyZonesDataInstance();
+	fancyZonesData.CustomZoneSetsToJsonFile(ZoneWindowUtils::GetCustomZoneSetsTmpPath());
+
+	const auto deviceInfo = fancyZonesData.FindDeviceInfo(zoneWindow->UniqueId());
+	if (!deviceInfo.has_value()) return;
+
+	JSONHelpers::DeviceInfoJSON deviceInfoJson{ zoneWindow->UniqueId(), *deviceInfo };
+
+    if(deviceInfoJson.data.activeZoneSet.type == JSONHelpers::ZoneSetLayoutType::Custom) return;
+
+	if (vkCode == VK_OEM_PLUS) 
+	{
+		deviceInfoJson.data.zoneCount++;
+	}
+	else if (deviceInfoJson.data.zoneCount > 1) 
+	{
+		deviceInfoJson.data.zoneCount--;
+	}
+
+	fancyZonesData.SerializeDeviceInfoToTmpFile(deviceInfoJson, ZoneWindowUtils::GetActiveZoneSetTmpPath());
+
+	JSONHelpers::FancyZonesDataInstance().ParseDeviceInfoFromTmpFile(ZoneWindowUtils::GetActiveZoneSetTmpPath());
+	JSONHelpers::FancyZonesDataInstance().SaveFancyZonesData();
+	UpdateZoneWindows();
+    if (m_settings->GetSettings()->displayChange_moveWindows)
+    {
+		MoveWindowsOnDisplayChange();
     }
 }
 
