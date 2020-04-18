@@ -442,14 +442,24 @@ bool FancyZones::HandleDefaultBindings(DWORD vkCode, bool win, bool control, boo
             }
         }
     }
+    if (win && shift && !control)
+    {
+        // 1-9
+        if (vkCode >= 49 && vkCode <= 57)
+        {
+            MoveWindowIntoZoneByIndex(GetForegroundWindow(), nullptr, vkCode - 49);
+            return true;
+        }
+    }
+
     return false;
 }
 
 bool FancyZones::HandleVimBindings(DWORD vkCode, bool win, bool control, bool shift) noexcept
 {
-    if (win && !shift && !control)
+    if (win && !shift)
     {
-		if (m_settings->GetSettings()->overrideSnapHotkeys)
+		if (m_settings->GetSettings()->overrideSnapHotkeys && !control)
 		{
 			if (vkCode == VkKeyScanW('h'))
 			{
@@ -494,25 +504,14 @@ bool FancyZones::HandleVimBindings(DWORD vkCode, bool win, bool control, bool sh
 			return true;
 		}
     }
-
-    if (win && !shift && control)
+    if (win && shift && !control)
     {
-		if (vkCode == VkKeyScanW('h'))
-		{
-			Trace::FancyZones::OnKeyDown(vkCode, win, control, false /*inMoveSize*/);
-			SendKeyDown(VK_LWIN);
-			SendKeyDown(VK_LCONTROL);
-			SendKeyDownUp(VK_LEFT);
-			return true;
-		}
-		if (vkCode == VkKeyScanW('l'))
-		{
-			Trace::FancyZones::OnKeyDown(vkCode, win, control, false /*inMoveSize*/);
-			SendKeyDown(VK_LWIN);
-			SendKeyDown(VK_LCONTROL);
-			SendKeyDownUp(VK_RIGHT);
-			return true;
-		}
+        // 1-9
+        if (vkCode >= 49 && vkCode <= 57)
+        {
+            MoveWindowIntoZoneByIndex(GetForegroundWindow(), nullptr, vkCode - 49);
+            return true;
+        }
     }
 
     if (win)
